@@ -23,10 +23,10 @@ KAGGLE_OUT = Path('/kaggle/working')
 # =====================================================================
 # Settings you may want to tweak between experiments
 # =====================================================================
-REMOVE_PLACEHOLDER_ADAPTERS = True   # sample adapters are tiny placeholders
+REMOVE_PLACEHOLDER_ADAPTERS = False  # the baseline (which scored) keeps them; agent.yaml references them
 MAX_TIME_MINUTES = 5                 # ~120 hidden tasks must fit in 12 h total
-MAX_TOOL_CALLS = 80
-MAX_TURNS = 80
+MAX_TOOL_CALLS = 100                 # baseline value
+MAX_TURNS = 50                       # baseline value; higher may exceed the allowed limit
 
 SAMPLING_YAML = (
     "temperature: 0.2\n"
@@ -91,14 +91,14 @@ def remove_placeholder_adapters(agent_dir: Path) -> None:
     originals = {y: y.read_text(encoding='utf-8') for y in yaml_files}
     adapter_names = [d.name for d in (agent_dir / 'adapters').iterdir() if d.is_dir()]
     for y, txt in originals.items():
-        y.write_text(re.sub(r'(?m)^[ \t]*adapter:[ \t]*\S+[ \t]*\n', '', txt), encoding='utf-8')
+        y.write_text(re.sub(r'(?m)^[ \t]*adapter:[ \t]*\S+[ \t]*\n', '', txt), encoding='utf-8', newline='\n')
     still_referenced = [
         n for n in adapter_names
         if any(n in y.read_text(encoding='utf-8') for y in yaml_files)
     ]
     if still_referenced:
         for y, txt in originals.items():
-            y.write_text(txt, encoding='utf-8')
+            y.write_text(txt, encoding='utf-8', newline='\n')
         print(f'[!] Adapters still referenced elsewhere ({still_referenced}); kept them unchanged.')
     else:
         shutil.rmtree(agent_dir / 'adapters')
@@ -113,7 +113,7 @@ def set_budgets(agent_dir: Path) -> None:
     section['max_time_minutes'] = MAX_TIME_MINUTES
     section['max_tool_calls'] = MAX_TOOL_CALLS
     section['max_turns'] = MAX_TURNS
-    cfg_path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding='utf-8')
+    cfg_path.write_text(yaml.safe_dump(raw, sort_keys=False), encoding='utf-8', newline='\n')
     print('NEW eval_config:', dict(section))
 
 
@@ -169,8 +169,8 @@ def main() -> None:
     if REMOVE_PLACEHOLDER_ADAPTERS:
         remove_placeholder_adapters(agent_dir)
     set_budgets(agent_dir)
-    (agent_dir / 'configs' / 'sampling.yaml').write_text(SAMPLING_YAML, encoding='utf-8')
-    (agent_dir / 'prompts' / 'system.md').write_text(SYSTEM_PROMPT, encoding='utf-8')
+    (agent_dir / 'configs' / 'sampling.yaml').write_text(SAMPLING_YAML, encoding='utf-8', newline='\n')
+    (agent_dir / 'prompts' / 'system.md').write_text(SYSTEM_PROMPT, encoding='utf-8', newline='\n')
 
     agent_yaml_text = (agent_dir / 'agent.yaml').read_text(encoding='utf-8')
     print(f'\n===== FINAL agent.yaml =====\n{agent_yaml_text}')

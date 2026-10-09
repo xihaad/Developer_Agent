@@ -24,7 +24,7 @@ KAGGLE_OUT = Path('/kaggle/working')
 # Settings you may want to tweak between experiments
 # =====================================================================
 REMOVE_PLACEHOLDER_ADAPTERS = False  # the baseline (which scored) keeps them; agent.yaml references them
-MAX_TIME_MINUTES = 5                 # ~120 hidden tasks must fit in 12 h total
+MAX_TIME_MINUTES = 60                # value from the submission that succeeded; 5 coincided with Kaggle Errors
 MAX_TOOL_CALLS = 100                 # baseline value
 MAX_TURNS = 50                       # baseline value; higher may exceed the allowed limit
 
